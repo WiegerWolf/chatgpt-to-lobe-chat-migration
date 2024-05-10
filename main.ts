@@ -29,14 +29,15 @@ async function main() {
         const zipTextWriter = new zip.TextWriter();
         const zipEntryData = await zipEntry.getData(zipTextWriter)
         try {
-          const json = JSON.parse(zipEntryData);
+          const conversations = JSON.parse(zipEntryData);
+          console.log(json);
           // TODO: write to output file after parsing and converting to lobe format
         } catch (e) {
           console.error(e);
           continue;
         }
       }
-      zipFile.close();
+      // zipFile.close();
     }
   }
 }
