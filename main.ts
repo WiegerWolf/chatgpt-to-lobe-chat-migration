@@ -79,6 +79,22 @@ interface ChatGPTConversation {
   update_time: number; // unix timestamp.microseconds
 }
 
+function formatDateToTZ(
+  date: Date, 
+  tz: string = 'Europe/Amsterdam'
+): string {
+  const formatter1 = new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'full',
+    timeStyle: 'long',
+    timeZone: tz,
+  });
+  return formatter1.format(date);
+}
+
+function unixTimestampFloatMicrosecondsToDate(timestamp: number): Date {
+  return new Date(timestamp*1e3);
+}
+
 async function main() {
   for await (const dirEntry of Deno.readDir(INPUT_DIR)) {
     if (!dirEntry.isFile) {
@@ -99,13 +115,19 @@ async function main() {
         }
         const zipTextWriter = new zip.TextWriter();
         const zipEntryData = await zipEntry.getData(zipTextWriter)
+        let conversations: ChatGPTConversation[];
         try {
-          const json = JSON.parse(zipEntryData);
-          console.log(json);
-          // TODO: write to output file after parsing and converting to lobe format
+          conversations = JSON.parse(zipEntryData);
         } catch (e) {
           console.error(e);
           continue;
+        }
+        for (const conversation of conversations) {
+          const {
+            create_time,
+          } = conversation;
+          console.log(formatDateToTZ(unixTimestampFloatMicrosecondsToDate(create_time), 'America/New_York'))
+          debugger
         }
       }
       zipFile.close();
