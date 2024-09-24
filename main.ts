@@ -15,7 +15,7 @@ interface ChatGPTConversationMessageAuthor {
 }
 
 interface ChatGPTConversationMessageContent {
-  content_type: 'text';
+  content_type: 'text' | 'multimodal_text';
   parts: string[];
 }
 
@@ -95,6 +95,94 @@ function unixTimestampFloatMicrosecondsToDate(timestamp: number): Date {
   return new Date(timestamp*1e3);
 }
 
+type LobeChatTopic = {
+  title: string;
+  favorite: number;
+  sessionId: string;
+  createdAt: number;
+  id: string;
+  updatedAt: number;
+}
+
+type LobeChatMessage = {
+  role: string;
+  content: string;
+  files: string[];
+  parentId?: string;
+  sessionId: string;
+  topicId: string;
+  createdAt: number;
+  id: string;
+  updatedAt: number;
+  extra: {
+    fromModel?: string;
+    fromProvider?: string;
+  },
+  meta: {},
+}
+
+function convertTime(time: number): number {
+  return Math.round(time*1e3);
+}
+
+async function processConversations(conversations: ChatGPTConversation[]) {
+  const DEFAULT_SESSION_ID = "inbox"
+  const res = {
+    exportType: "sessions",
+    version: 7,
+    state: {
+      sessions: [],
+      sessionGroups: [],
+      messages: [] as LobeChatMessage[],
+      topics: [] as LobeChatTopic[],
+    },
+  };
+
+  for (const conversation of conversations) {
+    res.state.topics.push({
+      title: conversation.title,
+      favorite: 0,
+      sessionId: DEFAULT_SESSION_ID,
+      createdAt: convertTime(conversation.create_time),
+      id: conversation.id,
+      updatedAt: convertTime(conversation.update_time),
+    });
+
+    for (const [key, value] of Object.entries(conversation.mapping)) {
+      const { message } = value;
+      if (!message) continue;
+      if (message.author.role === "system") continue;
+      if (message.content.content_type !== "text") continue;
+      const { metadata } = message;
+      const msgObj: LobeChatMessage = {
+        role: message.author.role,
+        content: message.content.parts.join(" "),
+        files: [],
+        sessionId: DEFAULT_SESSION_ID,
+        topicId: conversation.id,
+        createdAt: convertTime(message.create_time||conversation.create_time),
+        id: key,
+        updatedAt: convertTime(message.update_time||conversation.update_time),
+        extra: {},
+        meta: {},
+      }
+      if (metadata.parent_id) {
+        msgObj.parentId = metadata.parent_id
+      }
+      if (message.author.role === "assistant") {
+        msgObj.extra.fromModel = metadata.model_slug || "gpt-4o"
+        msgObj.extra.fromProvider = "openai"
+      }
+      res.state.messages.push(msgObj)
+    }
+  }
+
+  // write to file
+  const outputFilePath = `${OUTPUT_DIR}/LobeChat-sessions-v7.json`;
+  const output = JSON.stringify(res, null, 2);
+  await Deno.writeTextFile(outputFilePath, output);
+}
+
 async function main() {
   for await (const dirEntry of Deno.readDir(INPUT_DIR)) {
     if (!dirEntry.isFile) {
@@ -122,15 +210,9 @@ async function main() {
           console.error(e);
           continue;
         }
-        for (const conversation of conversations) {
-          const {
-            create_time,
-          } = conversation;
-          console.log(formatDateToTZ(unixTimestampFloatMicrosecondsToDate(create_time), 'America/New_York'))
-          debugger
-        }
+        await processConversations(conversations);
       }
-      zipFile.close();
+      // zipFile.close();
     }
   }
 }
