@@ -79,22 +79,6 @@ interface ChatGPTConversation {
   update_time: number; // unix timestamp.microseconds
 }
 
-function formatDateToTZ(
-  date: Date, 
-  tz: string = 'Europe/Amsterdam'
-): string {
-  const formatter1 = new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'full',
-    timeStyle: 'long',
-    timeZone: tz,
-  });
-  return formatter1.format(date);
-}
-
-function unixTimestampFloatMicrosecondsToDate(timestamp: number): Date {
-  return new Date(timestamp*1e3);
-}
-
 type LobeChatTopic = {
   title: string;
   favorite: number;
@@ -125,6 +109,11 @@ function convertTime(time: number): number {
   return Math.round(time*1e3);
 }
 
+function sanitizeText(text: string): string {
+  // make sure the text doesn't contain any unicode ambiguities or control characters
+  return text.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ');
+}
+
 async function processConversations(conversations: ChatGPTConversation[]) {
   const DEFAULT_SESSION_ID = "inbox"
   const res = {
@@ -140,7 +129,7 @@ async function processConversations(conversations: ChatGPTConversation[]) {
 
   for (const conversation of conversations) {
     res.state.topics.push({
-      title: conversation.title,
+      title: sanitizeText(conversation.title),
       favorite: 0,
       sessionId: DEFAULT_SESSION_ID,
       createdAt: convertTime(conversation.create_time),
@@ -156,7 +145,7 @@ async function processConversations(conversations: ChatGPTConversation[]) {
       const { metadata } = message;
       const msgObj: LobeChatMessage = {
         role: message.author.role,
-        content: message.content.parts.join(" "),
+        content: sanitizeText(message.content.parts.join(" ")),
         files: [],
         sessionId: DEFAULT_SESSION_ID,
         topicId: conversation.id,
@@ -212,7 +201,6 @@ async function main() {
         }
         await processConversations(conversations);
       }
-      // zipFile.close();
     }
   }
 }
