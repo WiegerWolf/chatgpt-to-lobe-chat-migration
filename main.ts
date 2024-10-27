@@ -1,6 +1,5 @@
 import { extname } from "https://deno.land/std@0.224.0/path/mod.ts";
 import * as zip from "jsr:@zip-js/zip-js";
-import {nanoid} from "npm:nanoid";
 
 const {
   INPUT_DIR = "./input",
@@ -159,7 +158,6 @@ async function processConversations(conversations: ChatGPTConversation[]) {
         extra: {},
         meta: {},
         userId: USER_ID,
-        // clientId: nanoid(),
       };
       if (metadata.parent_id) {
         msgObj.parentId = metadata.parent_id;
