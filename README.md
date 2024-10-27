@@ -110,7 +110,7 @@ There are two `user` messages with same id `aaa214dc-8a2e-45fe-96c6-ee1bb5291161
 such structure, lobe chat importer will not be able to handle it.
 
 In such cases, you can go to the server logs for your lobe chat instance and check the
-error message. It will point to a specific message that has the same uuid. Just delete the duplicates
-until there's only one left.
+error message. It will point to a specific message that has the same uuid. Just delete the duplicates from the `output` folder
+manually until there's only one left.
 
 Then you can reimport the data, hopefully without issues.
