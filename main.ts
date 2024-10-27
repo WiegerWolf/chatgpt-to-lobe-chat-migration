@@ -1,10 +1,12 @@
 import { extname } from "https://deno.land/std@0.224.0/path/mod.ts";
 import * as zip from "jsr:@zip-js/zip-js";
+import {nanoid} from "npm:nanoid";
 
 const {
   INPUT_DIR = "./input",
   OUTPUT_DIR = "./output",
   LOOK_FOR_FILETYPE = ".zip",
+  USER_ID = "user_2lOQYUvnChKlyTyOlG86ZPFGbIF", // make sure this is the same as un `users` table in your lobe chat database
   CONVERSATIONS_FILE = "conversations.json",
 } = Deno.env.toObject();
 
@@ -44,7 +46,6 @@ interface ChatGPTConversationMessage {
   end_turn: boolean;
   id: string; // uuid
   metadata: ChatGPTConversationMessageMetadata;
-
   recipient: string; // 'all'
   status: string; // 'finished_successfully'
   update_time?: null;
@@ -103,6 +104,8 @@ type LobeChatMessage = {
     fromProvider?: string;
   };
   meta: Record<string | number | symbol, never>;
+  userId: string;
+  clientId?: string;
 };
 
 function convertTime(time: number): number {
@@ -155,6 +158,8 @@ async function processConversations(conversations: ChatGPTConversation[]) {
         updatedAt: convertTime(message.update_time || conversation.update_time),
         extra: {},
         meta: {},
+        userId: USER_ID,
+        // clientId: nanoid(),
       };
       if (metadata.parent_id) {
         msgObj.parentId = metadata.parent_id;

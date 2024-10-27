@@ -1,13 +1,17 @@
 {
-  "version": "3",
-  "packages": {
-    "specifiers": {
-      "jsr:@zip-js/zip-js": "jsr:@zip-js/zip-js@2.7.44"
-    },
-    "jsr": {
-      "@zip-js/zip-js@2.7.44": {
-        "integrity": "5579d2a2c6438e459aa9ae11e16b07cc76e1cdbb5901f52a446eda72eb0c9dca"
-      }
+  "version": "4",
+  "specifiers": {
+    "jsr:@zip-js/zip-js@*": "2.7.44",
+    "npm:nanoid@*": "5.0.7"
+  },
+  "jsr": {
+    "@zip-js/zip-js@2.7.44": {
+      "integrity": "5579d2a2c6438e459aa9ae11e16b07cc76e1cdbb5901f52a446eda72eb0c9dca"
+    }
+  },
+  "npm": {
+    "nanoid@5.0.7": {
+      "integrity": "sha512-oLxFY2gd2IqnjcYyOXD8XGCftpGtZP2AbHbOkthDkvRywH5ayNtPVy9YlOPcHckXzbLTCHpkb7FB+yuxKV13pQ=="
     }
   },
   "remote": {
